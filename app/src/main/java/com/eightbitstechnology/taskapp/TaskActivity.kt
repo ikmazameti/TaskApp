@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,8 +40,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,7 +55,6 @@ import com.eightbitstechnology.taskapp.ui.theme.TaskAppTheme
 
 class TaskActivity : ComponentActivity() {
     //todo 1: Add viewmodel
-    private val taskViewModel by viewModels<TaskViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +62,7 @@ class TaskActivity : ComponentActivity() {
         setContent {
             TaskAppTheme {
                 //todo 2: Pass viewmodel to TodoApp
-                TodoApp(taskViewModel)
+                TodoApp()
             }
         }
     }
@@ -73,14 +71,17 @@ class TaskActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodoApp(taskViewModel: TaskViewModel) {
+fun TodoApp() {
     //todo 3:  Collect all tasks from viewmodel
 
-//    val tasks = remember {
-//        mutableStateListOf<Task>()
-//    }
+    val tasks = remember {
+        mutableStateListOf<Task>(
+            Task(title = "Task 1"),
+            Task(title = "Task 2"),
+            Task(title = "Task 3"),
+        )
+    }
 
-    val tasks by taskViewModel.allTasks.collectAsState(initial = null)
 
     var showAddDialog by remember { mutableStateOf(false) }
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
@@ -128,9 +129,8 @@ fun TodoApp(taskViewModel: TaskViewModel) {
                     onTaskClick = { task -> taskToEdit = task },
                     onTaskChecked = { task ->
                         //todo 3: Update task in viewmodel
-                        taskViewModel.update(task = task.copy(isCompleted = !task.isCompleted))
-//                        val index = tasks.indexOfFirst { it.id == task.id }
-//                        tasks[index] = task.copy(isCompleted = !task.isCompleted)
+                        val index = tasks.indexOfFirst { it.id == task.id }
+                        tasks[index] = task.copy(isCompleted = !task.isCompleted)
                     },
                     onDeleteClick = { task ->
                         taskToDelete = task
@@ -152,11 +152,12 @@ fun TodoApp(taskViewModel: TaskViewModel) {
                     //todo 5: Save task in viewmodel
 
                     if (taskToEdit != null) {
-                        taskViewModel.update(taskToEdit!!.copy(title = title))
+                        val index = tasks.indexOfFirst { it.id == taskToEdit!!.id }
+                        tasks[index] = taskToEdit!!.copy(title = title)
                     } else {
-                        taskViewModel.insert(Task(title = title))
+                        val newId = (tasks.maxOfOrNull { it.id } ?: 0) + 1
+                        tasks.add(Task(id = newId, title = title))
                     }
-
                     showAddDialog = false
                     taskToEdit = null
                 }
@@ -169,7 +170,7 @@ fun TodoApp(taskViewModel: TaskViewModel) {
                 title = taskToDelete!!.title,
                 onConfirm = {
                     //todo 6:  Delete task from viewmodel
-                    taskViewModel.delete(taskToDelete!!)
+                    tasks.remove(taskToDelete)
                     showDeleteDialog = false
                     taskToDelete = null
                 },
@@ -186,7 +187,7 @@ fun TodoApp(taskViewModel: TaskViewModel) {
 @Composable
 fun PreviewTodoApp() {
     TaskAppTheme {
-        //  TodoApp(TaskViewModel())
+        TodoApp()
     }
 }
 
