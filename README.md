@@ -4,7 +4,7 @@
 
 Welcome to this hands-on tutorial where we’ll unpack what Room is, why it’s important, and walk you through a **simple yet solid example** to get started.
 
-🎥 **Watch the full video here**: [👉 YouTube Video Link](https://your-video-link-here)
+🎥 **Watch the full video here**: [👉 YouTube Video Link](https://www.youtube.com/watch?v=fB9dZlAQYRA)
 
 ---
 
@@ -31,7 +31,7 @@ To help you understand Room better, we built and compared **two versions** of th
 
 ## 🛠️ Project Setup
 
-Starter project link is included in the [📌 video description](https://your-video-link-here).
+Starter project link is included in the [📌 video description](https://www.youtube.com/watch?v=fB9dZlAQYRA).
 
 We use:
 
@@ -72,6 +72,35 @@ id("com.google.devtools.ksp") version "2.1.10-1.0.31"
 | `MainActivity.kt` | The UI entry point with Compose setup |
 
 ---
+
+## Sample Codes
+```kotlin
+
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+
+@Database(entities = [Task::class], version = 1)
+abstract class TaskDatabase : RoomDatabase() {
+    abstract fun taskDao(): TaskDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: TaskDatabase? = null
+        fun getDatabase(context: Context): TaskDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext, TaskDatabase::class.java, "task_db"
+                ).build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}
+```
 
 ## 🧠 Key Concepts Covered
 
